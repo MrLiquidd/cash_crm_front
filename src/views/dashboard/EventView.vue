@@ -29,15 +29,24 @@
       class="elevation-1"
     >
       <template v-slot:[`item.description`]="{ item }">
-        <div>
-          <div class="description">{{ item.description }}</div>
-          <div class="comment">Комментарий к событию</div>
-          <div>{{ item.comment }}</div>
+        <div class="description">{{ item.description }}</div>
+        <div v-if="item.comments">
+          <div v-for="(comment, index) in item.comments" :key="index">
+            <div class="comment">Комментарий к событию</div>
+            <div class="user-comment">{{ item.comments_main[index] }}</div>
+            <div>{{ comment }}</div>
+            <v-divider></v-divider>
+          </div>
         </div>
       </template>
       <template v-slot:[`item.client.full_name`]="{ item }">
         <a :href="getClientUrl(item.client.id)" class="user-link">
           {{ item.client.full_name }}
+        </a>
+      </template>
+      <template v-slot:[`item.reflective.full_name`]="{ item }">
+        <a :href="getUserUrl(item.client.id)" class="user-link">
+          {{ item.reflective.full_name }}
         </a>
       </template>
       <template v-slot:[`item.event_type`]="{ item }">
@@ -54,6 +63,9 @@
       </template>
       <template v-slot:[`item.modified_at`]="{ item }">
         {{ formatDate(item.modified_at) }}
+      </template>
+      <template v-slot:no-data>
+        <v-alert :value="true" color="primary"> События отсутствуют </v-alert>
       </template>
     </v-data-table>
   </v-card>
@@ -75,7 +87,7 @@ export default {
       colums: [
         {
           align: "start",
-          key: "id",
+          key: "idd",
           sortable: true,
           title: "#",
         },
@@ -105,7 +117,7 @@ export default {
         },
         {
           align: "start",
-          key: "client.office",
+          key: "client.office.office",
           sortable: true,
           title: "Офис",
         },
@@ -117,6 +129,12 @@ export default {
         },
         {
           align: "start",
+          key: "reflective.full_name",
+          sortable: true,
+          title: "Исполнитель",
+        },
+        {
+          align: "start",
           key: "modified_at",
           sortable: true,
           title: "Обновлено",
@@ -125,15 +143,17 @@ export default {
     };
   },
   mounted() {
-    this.getLeads();
+    this.getEvents();
   },
   methods: {
-    async getLeads() {
+    async getEvents() {
       axios
         .get("/api/events/")
         .then((response) => {
-          this.rows = response.data;
-          console.log(this.rows);
+          this.rows = response.data.map((item, index) => ({
+            idd: index + 1,
+            ...item,
+          }));
           this.loading = false;
           this.total = this.rows.length;
         })
@@ -145,7 +165,7 @@ export default {
       // Функция для определения класса в зависимости от статуса
       switch (status) {
         case "Запланировано":
-          return "yellow lighten-3"; // Пример класса для активного статуса
+          return "#7270FF"; // Пример класса для активного статуса
         case "Обработано":
           return "yellow lighten-3";
         case "Выполнено":
@@ -161,7 +181,7 @@ export default {
         case "Выполнено":
           return "bg-success";
         case "Запланировано":
-          return "bg-yellow";
+          return "bg-wait";
         case "Обработано":
           return "bg-yellow";
         case "Просрочено":
@@ -171,7 +191,6 @@ export default {
       }
     },
     formatDate(dateString) {
-      console.log(dateString);
       const date = new Date(dateString);
       const day = String(date.getDate()).padStart(2, "0");
       const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -201,6 +220,10 @@ export default {
 
 .bg-success {
   background-color: green;
+}
+
+.bg-wait {
+  background-color: #7270ff;
 }
 
 .bg-yellow {

@@ -36,10 +36,10 @@
         <v-col cols="8" sm="8" md="8">
           <v-autocomplete
             v-model="form.author"
-            density="comfortable"
-            item-title="userStore.user.full_name"
-            item-value="userStore.user.id"
-            :items="[userStore.user.full_name]"
+            density="compact"
+            :items="users"
+            item-title="full_name"
+            item-value="id"
             :readonly="loading"
             :rules="[required]"
             label="Ответственный"
@@ -62,12 +62,16 @@
         <v-col cols="8" sm="8" md="8">
           <v-autocomplete
             v-model="form.personal_access"
-            item-title="userStore.user.full_name"
-            item-value="userStore.user.id"
-            :items="[userStore.user.full_name]"
-            density="comfortable"
-            label="Персональный доступ"
+            density="compact"
+            :items="users"
+            item-title="full_name"
+            item-value="id"
+            :readonly="loading"
+            :rules="[required]"
+            label="Ответственный"
             variant="outlined"
+            required
+            auto-select-first
           ></v-autocomplete>
         </v-col>
         <v-col cols="4" sm="4" md="4">
@@ -136,7 +140,8 @@ export default {
     ckeditor: CKEditor.component,
   },
   data: () => ({
-    dialog: false,
+    dialog: true,
+    users: [],
     form: {
       roles: [],
       theme: "",
@@ -146,7 +151,6 @@ export default {
       personal_access: "",
       description: "<p>Content of the editor.</p>",
     },
-    loading: false,
     status: [
       "Не начато",
       "В работе",
@@ -205,6 +209,9 @@ export default {
       return this.form.roles.length > 0;
     },
   },
+  mounted() {
+    this.getUsers();
+  },
   methods: {
     required(v) {
       return !!v || "Field is required";
@@ -224,7 +231,7 @@ export default {
         axios
           .post("/api/topics/", this.form)
           .then((response) => {
-            console.log("Client added successfully:", response.data);
+            console.log("Topic added successfully:", response.data);
             this.dialog = false;
           })
           .catch((error) => {
@@ -233,6 +240,16 @@ export default {
       } catch (e) {
         console.error("Error adding client:", e);
       }
+    },
+    async getUsers() {
+      axios
+        .get("/api/accounts/")
+        .then((response) => {
+          this.users = response.data;
+        })
+        .catch((error) => {
+          console.log(error);
+        });
     },
   },
 };

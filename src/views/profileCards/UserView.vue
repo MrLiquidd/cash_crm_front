@@ -31,11 +31,33 @@
                 </v-flex>
               </v-flex>
               <v-flex xs6 sm4 md3>
-                <v-icon
-                  icon="mdi-pencil-box-multiple-outline"
-                  color="grey"
-                  size="x-small"
-                ></v-icon>
+                <v-btn variant="text" @click="openEditClientDialog">
+                  <v-icon
+                    icon="mdi-pencil-box-multiple-outline"
+                    color="grey"
+                    size="large"
+                  ></v-icon>
+                  <v-menu activator="parent" :location="start">
+                    <v-list>
+                      <v-list-item>
+                        <v-btn
+                          size="small"
+                          variant="text"
+                          @click="openChangePassword"
+                          >Сменить пароль</v-btn
+                        >
+                      </v-list-item>
+                      <v-list-item>
+                        <v-btn
+                          size="small"
+                          variant="text"
+                          @click="openEditProfile"
+                          >Изменить пользователя</v-btn
+                        >
+                      </v-list-item>
+                    </v-list>
+                  </v-menu>
+                </v-btn>
               </v-flex>
             </v-layout>
             <v-spacer style="height: 10px"></v-spacer>
@@ -91,10 +113,28 @@
             flex-direction: column;
             justify-content: flex-end;
             display: flex;
-            align-items: center;
+            align-items: end;
           "
         >
-          <div>
+          <v-row style="margin-top: 20px; margin-right: 20px">
+            <v-btn
+              variant="text"
+              size="small"
+              style="color: #e53935"
+              dark
+              @click="openDeleteClientDialog"
+            >
+              Настройки сотрудника
+            </v-btn>
+          </v-row>
+          <div
+            style="
+              flex-direction: column;
+              justify-content: flex-end;
+              display: flex;
+              align-items: center;
+            "
+          >
             <v-row no-gutters>
               <v-col cols="12" class="user-info2">
                 <p>Текущий период</p>
@@ -157,10 +197,10 @@
             color="#4CAF50"
             height="10"
             max="100"
-            :model-value="100"
+            :model-value="0"
             rounded
           >
-            100%
+            0%
           </v-progress-linear>
         </v-col>
       </v-row>
@@ -175,10 +215,10 @@
             color="#4CAF50"
             height="10"
             max="100"
-            :model-value="80"
+            :model-value="0"
             rounded
           >
-            80%
+            0%
           </v-progress-linear>
         </v-col>
       </v-row>
@@ -193,10 +233,10 @@
             color="#4CAF50"
             height="10"
             max="100"
-            :model-value="60"
+            :model-value="0"
             rounded
           >
-            60%
+            0%
           </v-progress-linear>
         </v-col>
       </v-row>
@@ -211,10 +251,10 @@
             color="#4CAF50"
             height="10"
             max="100"
-            :model-value="40"
+            :model-value="0"
             rounded
           >
-            40%
+            0%
           </v-progress-linear>
         </v-col>
       </v-row>
@@ -229,10 +269,10 @@
             color="#4CAF50"
             height="10"
             max="100"
-            :model-value="20"
+            :model-value="0"
             rounded
           >
-            20%
+            0%
           </v-progress-linear>
         </v-col>
       </v-row>
@@ -247,10 +287,10 @@
             color="#4CAF50"
             height="10"
             max="100"
-            :model-value="10"
+            :model-value="0"
             rounded
           >
-            10%
+            0%
           </v-progress-linear>
         </v-col>
       </v-row>
@@ -276,11 +316,86 @@
     <v-card
       class="relatve border rounded-lg dashboard"
       :elevation="20"
-      style="margin-top: 10px"
+      style="margin-top: 55px"
     >
-      <canvas id="myChart"></canvas>
-      <Bar :data="data" :options="options" />
+      <v-data-table
+        :headers="colums"
+        :items="rows"
+        :search="search"
+        :loading="loading"
+        hide-default-footer
+        class="elevation-1"
+      >
+        <template v-slot:[`item.description`]="{ item }">
+          <div class="description">{{ item.description }}</div>
+          <div v-if="item.comments">
+            <div v-for="(comment, index) in item.comments" :key="index">
+              <div class="comment">Комментарий к событию</div>
+              <div class="user-comment">{{ item.comments_main[index] }}</div>
+              <div>{{ comment }}</div>
+              <v-divider></v-divider>
+            </div>
+          </div>
+        </template>
+        <template v-slot:[`item.client.full_name`]="{ item }">
+          <a :href="getClientUrl(item.client.id)" class="user-link">
+            {{ item.client.full_name }}
+          </a>
+        </template>
+        <template v-slot:[`item.reflective.full_name`]="{ item }">
+          <a :href="getUserUrl(item.client.id)" class="user-link">
+            {{ item.reflective.full_name }}
+          </a>
+        </template>
+        <template v-slot:[`item.event_type`]="{ item }">
+          <div>
+            <span :class="getEventColor(item.status)" class="color-dot"></span>
+            {{ item.event_type }}
+          </div>
+        </template>
+        <template v-slot:[`item.status`]="{ value }">
+          <v-chip :color="getStatusColor(value)"> {{ value }}</v-chip>
+        </template>
+        <template v-slot:[`item.data`]="{ item }">
+          {{ formatDate(item.data) }}
+        </template>
+        <template v-slot:[`item.modified_at`]="{ item }">
+          {{ formatDate(item.modified_at) }}
+        </template>
+        <template v-slot:no-data>
+          <v-alert :value="true" color="primary"> События отсутствуют </v-alert>
+        </template>
+      </v-data-table>
     </v-card>
+    <!-- Delete user -->
+    <v-dialog v-model="delete_client_dialog" max-width="500">
+      <v-card max-width="1000" title="Уволить сотрудника">
+        <v-card-text>
+          <v-row>
+            <v-col cols="12">
+              <v-card-title>Вы уверены?</v-card-title>
+            </v-col>
+          </v-row>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+
+          <v-btn
+            text="Отмена"
+            variant="plain"
+            @click="delete_client_dialog = false"
+          ></v-btn>
+
+          <v-btn
+            color="red-darken-1"
+            text="Уволить"
+            variant="tonal"
+            @click="delete_client()"
+          ></v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <!-- Edit user -->
   </div>
 </template>
 
@@ -294,7 +409,6 @@ import {
   CategoryScale,
   LinearScale,
 } from "chart.js";
-import { Bar } from "vue-chartjs";
 import axios from "axios";
 
 ChartJS.register(
@@ -308,12 +422,11 @@ ChartJS.register(
 
 export default {
   name: "user-view",
-  components: {
-    Bar,
-  },
   data() {
     return {
       id: this.$route.params.uuid,
+      delete_client_dialog: false,
+      edit_dialog: false,
       user: {},
       userRaiting: {
         period: "Июнь 2024",
@@ -328,6 +441,63 @@ export default {
       options: {
         responsive: true,
       },
+      rows: [],
+      colums: [
+        {
+          align: "start",
+          key: "idd",
+          sortable: true,
+          title: "#",
+        },
+        {
+          align: "start",
+          key: "event_type",
+          sortable: true,
+          title: "Тип события",
+        },
+        {
+          align: "start",
+          key: "client.full_name",
+          sortable: true,
+          title: "Клиент",
+        },
+        {
+          align: "start",
+          key: "description",
+          sortable: true,
+          title: "Описание",
+        },
+        {
+          align: "start",
+          key: "data",
+          sortable: true,
+          title: "Дедлайн",
+        },
+        {
+          align: "start",
+          key: "client.office.office",
+          sortable: true,
+          title: "Офис",
+        },
+        {
+          align: "start",
+          key: "status",
+          sortable: true,
+          title: "Статус",
+        },
+        {
+          align: "start",
+          key: "reflective.full_name",
+          sortable: true,
+          title: "Исполнитель",
+        },
+        {
+          align: "start",
+          key: "modified_at",
+          sortable: true,
+          title: "Обновлено",
+        },
+      ],
     };
   },
   watch: {
@@ -339,14 +509,37 @@ export default {
   mounted() {
     const userId = this.$route.params.uuid;
     this.fetchUserData(userId);
+    this.fetchEvents();
   },
   methods: {
     edit() {},
+    openDeleteClientDialog() {
+      this.delete_client_dialog = true;
+    },
+    openEditProfile() {
+      this.edit_dialog = true;
+    },
+    async fetchEvents() {
+      axios
+        .get("/api/events/")
+        .then((response) => {
+          this.rows = response.data.map((item, index) => ({
+            idd: index + 1,
+            ...item,
+          }));
+          this.loading = false;
+          this.total = this.rows.length;
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    },
     fetchUserData() {
       axios
         .get(`/api/accounts/me/`)
         .then((response) => {
           this.user = response.data;
+          this.user.office = this.user.office.office;
           this.loading = false;
         })
         .catch((error) => {
@@ -365,8 +558,51 @@ export default {
 
       return (currentYear - savedYear) * 12 + (currentMonth - savedMonth);
     },
+    async delete_client() {
+      try {
+        axios
+          .delete(`/api/accounts/${this.user.id}/`)
+          .then((response) => {
+            console.log("User deleted successfully:", response.data);
+            this.delete_event_dialog = false;
+          })
+          .catch((error) => {
+            console.error("Error deleting event:", error);
+          });
+      } catch (e) {
+        console.error("Error deleting event:", e);
+      }
+    },
+    getStatusColor(status) {
+      // Функция для определения класса в зависимости от статуса
+      switch (status) {
+        case "Запланировано":
+          return "#7270FF"; // Пример класса для активного статуса
+        case "Обработано":
+          return "yellow lighten-3";
+        case "Выполнено":
+          return "green lighten-3";
+        case "Просрочено":
+          return "red lighten-3";
+        default:
+          return ""; // По умолчанию никакой дополнительный класс
+      }
+    },
+    getEventColor(status) {
+      switch (status) {
+        case "Выполнено":
+          return "bg-success";
+        case "Запланировано":
+          return "bg-wait";
+        case "Обработано":
+          return "bg-yellow";
+        case "Просрочено":
+          return "bg-danger";
+        default:
+          return "bg-secondary";
+      }
+    },
     formatDate(dateString) {
-      console.log(dateString);
       const date = new Date(dateString);
       const day = String(date.getDate()).padStart(2, "0");
       const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -374,6 +610,12 @@ export default {
       const hours = String(date.getHours()).padStart(2, "0");
       const minutes = String(date.getMinutes()).padStart(2, "0");
       return `${day}.${month}.${year} ${hours}:${minutes}`;
+    },
+    getClientUrl(userId) {
+      return `/client/${userId}`;
+    },
+    getUserUrl(userId) {
+      return `/user/${userId}`;
     },
   },
 };

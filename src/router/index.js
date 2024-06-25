@@ -14,6 +14,9 @@ import Hiring from "@/views/dashboard/reports/HiringView.vue";
 import LostClients from "@/views/dashboard/reports/LostClientsView.vue";
 import Operators from "@/views/dashboard/reports/OperatorsView.vue";
 import Sales from "@/views/dashboard/reports/SalesView.vue";
+import OfficesView from "@/views/admin/OfficesView.vue";
+import SellsClientView from "@/views/admin/SellsClientView.vue";
+import UsersView from "@/views/admin/UsersView.vue";
 
 const routes = [
   {
@@ -102,6 +105,21 @@ const routes = [
     path: "/dashboard/reports/sales",
     name: "Sales",
     component: Sales,
+  },
+  {
+    path: "/admin/offices",
+    name: "OfficesView",
+    component: OfficesView,
+  },
+  {
+    path: "/admin/sells-client",
+    name: "SellsClientView",
+    component: SellsClientView,
+  },
+  {
+    path: "/admin/users",
+    name: "UsersView",
+    component: UsersView,
   },
 ];
 

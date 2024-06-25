@@ -25,12 +25,28 @@
               required
               auto-select-first
             ></v-autocomplete>
+            <div
+              v-if="
+                form.event_type == 'Открытие счета' ||
+                form.event_type == 'Пополнение счета'
+              "
+            >
+              <v-text-field
+                density="compact"
+                v-model="form.in_usd"
+                :readonly="loading"
+                :rules="[required]"
+                class="mb-2"
+                label="Сумма в USD"
+                variant="outlined"
+              ></v-text-field>
+            </div>
             <v-text-field
               v-model="form.data"
               type="datetime-local"
               id="meeting-time"
               name="meeting-time"
-              label="Тип события"
+              label="Выберите дату и время"
               variant="outlined"
               density="compact"
             />
@@ -46,9 +62,11 @@
               auto-select-first
             ></v-autocomplete>
             <v-autocomplete
-              v-model="form.responsible"
+              v-model="form.reflective"
               density="compact"
-              :items="[userStore.user.full_name]"
+              :items="users"
+              item-title="full_name"
+              item-value="id"
               :readonly="loading"
               :rules="[required]"
               label="Ответственный"
@@ -57,7 +75,20 @@
               auto-select-first
             ></v-autocomplete>
             <v-autocomplete
-              v-model="form.responsible"
+              v-model="form.office"
+              density="compact"
+              :items="office"
+              item-title="office"
+              item-value="id"
+              :readonly="loading"
+              :rules="[required]"
+              label="Офис"
+              variant="outlined"
+              required
+              auto-select-first
+            ></v-autocomplete>
+            <v-autocomplete
+              v-model="form.creator"
               item-disabled="disable"
               label="Создатель события"
               density="compact"
@@ -79,8 +110,8 @@
             ></v-autocomplete>
 
             <v-textarea
-              v-model="form.comment"
-              label="Комментарий"
+              v-model="form.description"
+              label="Описание"
               maxlength="120"
               density="compact"
               variant="outlined"
@@ -132,29 +163,46 @@ export default {
       "Пополнение счета",
       "Встреча",
     ],
-
+    is_staff: false,
     form: {
       reflective: "",
       event_type: "",
+      office: "",
       status: "",
-      comment: "",
+      description: "",
       in_usd: "",
-      responsible: "",
       client: "",
+      creator: "",
     },
+    user: "",
     clients: [],
+    users: [],
+    office: [],
     loading: false,
   }),
   mounted() {
+    const userStore = useUserStore();
+    this.is_staff = userStore.user.is_staff;
+    this.form.creator = userStore.user.full_name;
     this.getLeads();
+    this.getUsers();
+    this.getOffice();
+  },
+  computed: {
+    filteredItems() {
+      const userStore = useUserStore();
+      return this.is_staff ? this.users : userStore.user.full_name;
+    },
   },
   methods: {
     required(v) {
-      return !!v || "Field is required";
+      return !!v || "Поле обязательно!";
     },
     async save() {
       const userStore = useUserStore();
-      this.form.reflective = userStore.user.id;
+      this.is_staff = userStore.user.is_staff;
+      this.form.creator = userStore.user.id;
+      console.log(this.form);
       try {
         axios
           .post("/api/events/", this.form)
@@ -174,9 +222,26 @@ export default {
         .get("/api/leads/")
         .then((response) => {
           this.clients = response.data;
-          console.log(this.clients);
-          this.loading = false;
-          this.total = this.rows.length;
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    },
+    async getUsers() {
+      axios
+        .get("/api/accounts/")
+        .then((response) => {
+          this.users = response.data;
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    },
+    async getOffice() {
+      axios
+        .get("/api/office/")
+        .then((response) => {
+          this.office = response.data;
         })
         .catch((error) => {
           console.log(error);

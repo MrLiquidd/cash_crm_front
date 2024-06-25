@@ -12,7 +12,7 @@
         single-line
       ></v-text-field>
       <v-spacer></v-spacer>
-      <p>Клиенты</p>
+      <p>Список переходов клиентов по сотрудникам</p>
       &nbsp; &nbsp; &nbsp;
       <p>Показано: {{ rows.length }}</p>
       &nbsp;
@@ -21,29 +21,14 @@
       <p>Всего: {{ total }}</p>
     </v-card-title>
 
-    <v-data-table
-      :headers="colums"
-      :items="rows"
-      :search="search"
-      :loading="loading"
-    >
-      <template v-slot:bottom>
-        <div class="text-center pt-2">
-          <v-pagination v-model="page" :length="pageCount"></v-pagination>
-        </div>
-      </template>
-      <template v-slot:[`item.name`]="{ item }">
-        <a :href="getClientUrl(item.id)" class="user-link">
-          {{ item.name }}
+    <v-data-table :headers="colums" :items="rows" :search="search">
+      <template v-slot:[`item.full_name`]="{ item }">
+        <a :href="getUserUrl(item.id)" class="user-link">
+          {{ item.full_name }}
         </a>
       </template>
-      <template v-slot:[`item.manager.full_name`]="{ item }">
-        <a :href="getUserUrl(item.manager.id)" class="user-link">
-          {{ item.manager.full_name }}
-        </a>
-      </template>
-      <template v-slot:no-data>
-        <v-alert :value="true" color="primary"> Клиенты отсутствуют </v-alert>
+      <template v-slot:[`item.hire_data`]="{ item }">
+        {{ formatDate(item.hire_data) }}
       </template>
     </v-data-table>
   </v-card>
@@ -51,16 +36,14 @@
 
 <script>
 import axios from "axios";
-
 export default {
-  name: "leads-view",
   data() {
     return {
       page: 1,
       total: 0,
       loading: true,
       itemsPerPage: 30,
-      rows: [],
+      rows: [].map((item, index) => ({ idd: index + 1, ...item })),
       search: "",
       colums: [
         {
@@ -71,21 +54,15 @@ export default {
         },
         {
           align: "start",
-          key: "name",
+          key: "full_name",
           sortable: true,
-          title: "Клиент",
+          title: "ФИО",
         },
         {
           align: "start",
-          key: "phone",
+          key: "job_title",
           sortable: true,
-          title: "Телефон",
-        },
-        {
-          align: "start",
-          key: "email",
-          sortable: true,
-          title: "E-mail",
+          title: "Должность",
         },
         {
           align: "start",
@@ -95,21 +72,27 @@ export default {
         },
         {
           align: "start",
-          key: "manager.full_name",
+          key: "phone",
           sortable: true,
-          title: "Менеджер",
+          title: "Телефон",
+        },
+        {
+          align: "start",
+          key: "hire_data",
+          sortable: true,
+          title: "Дата найма",
         },
       ],
     };
   },
   components: {},
   mounted() {
-    this.getLeads();
+    this.getUsers();
   },
   methods: {
-    async getLeads() {
+    async getUsers() {
       axios
-        .get("/api/leads/")
+        .get("/api/accounts/")
         .then((response) => {
           this.rows = response.data.map((item, index) => ({
             idd: index + 1,
@@ -122,11 +105,16 @@ export default {
           console.log(error);
         });
     },
-    getClientUrl(userId) {
-      return `/client/${userId}`;
-    },
     getUserUrl(userId) {
       return `/user/${userId}`;
+    },
+    formatDate(dateString) {
+      console.log(dateString);
+      const date = new Date(dateString);
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const year = date.getFullYear();
+      return `${day}.${month}.${year}`;
     },
   },
 };

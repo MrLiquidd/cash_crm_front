@@ -17,7 +17,9 @@
             <v-autocomplete
               v-model="form.office"
               density="compact"
-              :items="['BT BT']"
+              :items="office"
+              item-title="office"
+              item-value="id"
               :readonly="loading"
               :rules="[required]"
               label="Офис"
@@ -29,9 +31,11 @@
 
           <v-col cols="12" sm="6">
             <v-autocomplete
-              v-model="form.responsible"
+              v-model="form.manager"
               density="compact"
-              :items="[userStore.user.full_name]"
+              :items="users"
+              item-title="full_name"
+              item-value="id"
               :readonly="loading"
               :rules="[required]"
               label="Ответственный"
@@ -44,7 +48,7 @@
           <v-col cols="12" md="4" sm="6">
             <v-text-field
               density="compact"
-              v-model="form.firtstName"
+              v-model="form.firstName"
               :readonly="loading"
               :rules="[required]"
               class="mb-2"
@@ -113,17 +117,17 @@
 
           <v-col cols="12" sm="12" md="12">
             <v-textarea
-              density="compact"
               v-model="form.comment"
               label="Комментарий"
               maxlength="120"
+              density="compact"
+              variant="outlined"
               counter
               single-line
             ></v-textarea>
           </v-col>
         </v-row>
       </v-card-text>
-
       <v-divider></v-divider>
 
       <v-card-actions>
@@ -152,7 +156,8 @@ export default {
     form: {
       manager: "",
       name: "",
-      firtstName: "",
+      office: "",
+      firstName: "",
       middleName: "",
       lastName: "",
       phone: "",
@@ -160,18 +165,22 @@ export default {
       gender: "",
       comment: "",
     },
+    users: [],
+    office: [],
   }),
+  mounted() {
+    this.getUsers();
+    this.getOffice();
+  },
   methods: {
     required(v) {
       return !!v || "Field is required";
     },
     async save() {
-      const userStore = useUserStore();
-      this.form.manager = userStore.user.id;
       this.form.name =
-        this.form.firtstName +
+        this.form.firstName +
         " " +
-        this.form.lastName +
+        this.form.middleName +
         " " +
         this.form.lastName;
       try {
@@ -187,6 +196,27 @@ export default {
       } catch (e) {
         console.error("Error adding client:", e);
       }
+    },
+    async getUsers() {
+      axios
+        .get("/api/accounts/")
+        .then((response) => {
+          this.users = response.data;
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    },
+    async getOffice() {
+      axios
+        .get("/api/office/")
+        .then((response) => {
+          console.log(response.data);
+          this.office = response.data;
+        })
+        .catch((error) => {
+          console.log(error);
+        });
     },
   },
 };

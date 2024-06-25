@@ -7,6 +7,19 @@
       </v-toolbar-title>
       <v-spacer></v-spacer>
 
+      <v-btn color="grey" v-if="is_staff" href="/admin/users" text>
+        <v-icon class="ma-2" icon="mdi-account-circle" size="large"></v-icon>
+        <p>Сотрудники</p>
+      </v-btn>
+      <v-btn color="grey" v-if="is_staff" href="/admin/sells-client" text>
+        <v-icon icon="mdi-currency-usd" size="x-large"></v-icon>
+        <p>Торгующие клиенты</p>
+      </v-btn>
+      <v-btn color="grey" v-if="is_staff" href="/admin/office" text>
+        <v-icon icon="mdi-domain" size="x-large"></v-icon>
+        <p>Офисы</p>
+      </v-btn>
+
       <v-btn href="/dashboard/reports/employee-ratings" text>
         <v-icon
           icon="mdi-poll"
@@ -25,7 +38,10 @@
           </v-btn>
         </template>
 
-        <v-card max-height="100">
+        <v-card max-height="150">
+          <v-list-item v-if="is_staff">
+            <AddUser />
+          </v-list-item>
           <v-list class="d-flex justify-space-around">
             <v-list-item>
               <AddClient />
@@ -47,11 +63,7 @@
         <template v-slot:activator="{ props }">
           <v-btn color="grey" v-bind="props">
             <v-avatar>
-              <v-icon
-                class="ma-2"
-                icon="mdi-account-circle"
-                size="large"
-              ></v-icon>
+              <v-icon class="ma-2" icon="mdi-account-circle"></v-icon>
             </v-avatar>
             <v-icon icon="mdi-chevron-down" size="x-large"></v-icon>
           </v-btn>
@@ -72,6 +84,7 @@
       <v-list flat>
         <template v-for="link in links" :key="link.text">
           <v-list-item
+            v-if="!link.staffOnly || (link.staffOnly && is_staff)"
             @click="handleClick(link)"
             :to="link.route ? link.route : null"
             router
@@ -124,6 +137,7 @@ import { useUserStore } from "@/store/user";
 import AddClient from "@/components/AddClientPopup.vue";
 import AddEvent from "@/components/AddEventPopup.vue";
 import AddTopic from "@/components/AddTopicPopup.vue";
+import AddUser from "@/components/AddUserPopup.vue";
 
 export default {
   name: "nav-bar",
@@ -131,6 +145,7 @@ export default {
     AddClient,
     AddEvent,
     AddTopic,
+    AddUser,
   },
   setup() {
     const userStore = useUserStore();
@@ -141,6 +156,7 @@ export default {
   data: () => ({
     drawer: false,
     fav: true,
+    is_staff: "false",
     menu: false,
     notif: null,
     message: false,
@@ -157,6 +173,12 @@ export default {
         icon: "mdi-view-dashboard",
         text: "Топики",
         route: "/dashboard/topics",
+      },
+      {
+        icon: "mdi-file-remove",
+        text: "Blacklist",
+        route: "/dashboard/blacklist",
+        staffOnly: true,
       },
       {
         icon: "mdi-chart-box",
@@ -201,6 +223,11 @@ export default {
       },
     ],
   }),
+  mounted() {
+    const userStore = useUserStore();
+    this.is_staff = userStore.user.is_staff;
+  },
+
   methods: {
     async logout() {
       console.log("logout");

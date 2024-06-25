@@ -157,10 +157,10 @@
             color="#4CAF50"
             height="10"
             max="100"
-            :model-value="100"
+            :model-value="0"
             rounded
           >
-            100%
+            0%
           </v-progress-linear>
         </v-col>
       </v-row>
@@ -175,10 +175,10 @@
             color="#4CAF50"
             height="10"
             max="100"
-            :model-value="80"
+            :model-value="0"
             rounded
           >
-            80%
+            0%
           </v-progress-linear>
         </v-col>
       </v-row>
@@ -193,10 +193,10 @@
             color="#4CAF50"
             height="10"
             max="100"
-            :model-value="60"
+            :model-value="0"
             rounded
           >
-            60%
+            0%
           </v-progress-linear>
         </v-col>
       </v-row>
@@ -211,10 +211,10 @@
             color="#4CAF50"
             height="10"
             max="100"
-            :model-value="40"
+            :model-value="0"
             rounded
           >
-            40%
+            0%
           </v-progress-linear>
         </v-col>
       </v-row>
@@ -229,10 +229,10 @@
             color="#4CAF50"
             height="10"
             max="100"
-            :model-value="20"
+            :model-value="0"
             rounded
           >
-            20%
+            0%
           </v-progress-linear>
         </v-col>
       </v-row>
@@ -247,10 +247,10 @@
             color="#4CAF50"
             height="10"
             max="100"
-            :model-value="10"
+            :model-value="0"
             rounded
           >
-            10%
+            0%
           </v-progress-linear>
         </v-col>
       </v-row>
@@ -347,6 +347,7 @@ export default {
         .get(`/api/accounts/me/`)
         .then((response) => {
           this.user = response.data;
+          this.user.office = this.user.office.office;
           this.loading = false;
         })
         .catch((error) => {
@@ -366,7 +367,6 @@ export default {
       return (currentYear - savedYear) * 12 + (currentMonth - savedMonth);
     },
     formatDate(dateString) {
-      console.log(dateString);
       const date = new Date(dateString);
       const day = String(date.getDate()).padStart(2, "0");
       const month = String(date.getMonth() + 1).padStart(2, "0");

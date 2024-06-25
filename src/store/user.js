@@ -32,6 +32,7 @@ export const useUserStore = defineStore({
         this.user.id = localStorage.getItem("user.id");
         this.user.email = localStorage.getItem("user.email");
         this.user.full_name = localStorage.getItem("user.full_name");
+        this.user.is_staff = localStorage.getItem("user.is_staff");
         this.user.isAuthenticated = true;
 
         this.refreshToken();
@@ -74,10 +75,12 @@ export const useUserStore = defineStore({
       this.user.id = user.id;
       this.user.email = user.email;
       this.user.full_name = user.full_name;
+      this.user.is_staff = user.is_staff;
 
       localStorage.setItem("user.id", this.user.id);
       localStorage.setItem("user.email", this.user.email);
       localStorage.setItem("user.full_name", this.user.full_name);
+      localStorage.setItem("user.is_staff", this.user.is_staff);
 
       console.log("User", this.user);
     },

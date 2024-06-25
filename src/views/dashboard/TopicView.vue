@@ -75,6 +75,11 @@
             <template v-slot:[`item.deadline`]="{ item }">
               {{ formatDate(item.deadline) }}
             </template>
+            <template v-slot:no-data>
+              <v-alert :value="true" color="primary">
+                Топики отсутствуют
+              </v-alert>
+            </template>
           </v-data-table>
         </v-card>
       </v-col>
@@ -103,7 +108,7 @@ export default {
       colums: [
         {
           align: "start",
-          key: "id",
+          key: "idd",
           sortable: true,
           title: "#",
         },
@@ -141,15 +146,18 @@ export default {
     };
   },
   mounted() {
-    this.getLeads();
+    this.getTopics();
   },
   methods: {
-    async getLeads() {
+    async getTopics() {
       axios
         .get("/api/topics/")
         .then((response) => {
-          console.log(response.data.AddTopicCard);
-          this.rows = response.data;
+          console.log(response.data);
+          this.rows = response.data.map((item, index) => ({
+            idd: index + 1,
+            ...item,
+          }));
           this.loading = false;
           this.total = this.rows.length;
         })
@@ -187,7 +195,6 @@ export default {
       }
     },
     formatDate(dateString) {
-      console.log(dateString);
       const date = new Date(dateString);
       const day = String(date.getDate()).padStart(2, "0");
       const month = String(date.getMonth() + 1).padStart(2, "0");
