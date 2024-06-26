@@ -9,7 +9,7 @@ import vuetify from "./plugins/vuetify";
 
 loadFonts();
 
-axios.defaults.baseURL = "http://77.220.213.252:8888";
+axios.defaults.baseURL = "http://127.0.0.1:8000/";
 
 const app = createApp(App);
 
