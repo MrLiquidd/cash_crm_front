@@ -48,7 +48,7 @@
           <v-col cols="12" md="4" sm="6">
             <v-text-field
               density="compact"
-              v-model="form.firstName"
+              v-model="form.first_name"
               :readonly="loading"
               :rules="[required]"
               class="mb-2"
@@ -60,7 +60,7 @@
           <v-col cols="12" md="4" sm="6">
             <v-text-field
               density="compact"
-              v-model="form.middleName"
+              v-model="form.surname"
               :readonly="loading"
               :rules="[required]"
               class="mb-2"
@@ -72,7 +72,7 @@
           <v-col cols="12" md="4" sm="6">
             <v-text-field
               density="compact"
-              v-model="form.lastName"
+              v-model="form.last_name"
               :readonly="loading"
               class="mb-2"
               label="Отчество"
@@ -157,9 +157,9 @@ export default {
       manager: "",
       name: "",
       office: "",
-      firstName: "",
-      middleName: "",
-      lastName: "",
+      first_name: "",
+      surname: "",
+      last_name: "",
       phone: "",
       email: "",
       gender: "",
@@ -178,11 +178,12 @@ export default {
     },
     async save() {
       this.form.name =
-        this.form.firstName +
+        this.form.first_name +
         " " +
-        this.form.middleName +
+        this.form.surname +
         " " +
-        this.form.lastName;
+        this.form.last_name;
+      console.log(this.form);
       try {
         axios
           .post("/api/leads/", this.form)
