@@ -7,15 +7,20 @@
       </v-toolbar-title>
       <v-spacer></v-spacer>
 
-      <v-btn color="grey" v-if="is_staff" href="/admin/users" text>
+      <v-btn color="grey" v-if="is_staff == 'true'" href="/admin/users" text>
         <v-icon class="ma-2" icon="mdi-account-circle" size="large"></v-icon>
         <p>Сотрудники</p>
       </v-btn>
-      <v-btn color="grey" v-if="is_staff" href="/admin/sells-client" text>
+      <v-btn
+        color="grey"
+        v-if="is_staff == 'true'"
+        href="/admin/sells-client"
+        text
+      >
         <v-icon icon="mdi-currency-usd" size="x-large"></v-icon>
         <p>Торгующие клиенты</p>
       </v-btn>
-      <v-btn color="grey" v-if="is_staff" href="/admin/office" text>
+      <v-btn color="grey" v-if="is_staff == 'true'" href="/admin/office" text>
         <v-icon icon="mdi-domain" size="x-large"></v-icon>
         <p>Офисы</p>
       </v-btn>
@@ -39,7 +44,7 @@
         </template>
 
         <v-card max-height="150">
-          <v-list-item v-if="is_staff">
+          <v-list-item v-if="is_staff == 'true'">
             <AddUser />
           </v-list-item>
           <v-list class="d-flex justify-space-around">
@@ -156,7 +161,7 @@ export default {
   data: () => ({
     drawer: false,
     fav: true,
-    is_staff: "false",
+    is_staff: false,
     menu: false,
     notif: null,
     message: false,
@@ -226,11 +231,11 @@ export default {
   mounted() {
     const userStore = useUserStore();
     this.is_staff = userStore.user.is_staff;
+    console.log(this.is_staff);
   },
 
   methods: {
     async logout() {
-      console.log("logout");
       await axios
         .post("/api/v1/token/logout/")
         .then(() => {

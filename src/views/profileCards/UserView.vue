@@ -534,9 +534,9 @@ export default {
           console.log(error);
         });
     },
-    fetchUserData() {
+    fetchUserData(userId) {
       axios
-        .get(`/api/accounts/me/`)
+        .get(`/api/accounts/${userId}/`)
         .then((response) => {
           this.user = response.data;
           this.user.office = this.user.office.office;

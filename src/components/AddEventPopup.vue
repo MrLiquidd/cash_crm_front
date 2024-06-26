@@ -202,7 +202,6 @@ export default {
       const userStore = useUserStore();
       this.is_staff = userStore.user.is_staff;
       this.form.creator = userStore.user.id;
-      console.log(this.form);
       try {
         axios
           .post("/api/events/", this.form)

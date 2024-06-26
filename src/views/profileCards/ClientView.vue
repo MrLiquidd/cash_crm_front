@@ -100,6 +100,21 @@
   >
     <v-card-title class="d-flex align-center pe-2">
       <p style="color: #52dd16">События на будущее</p>
+      <v-spacer></v-spacer>
+      <v-btn
+        @click="openAddEventDialog()"
+        size="small"
+        color="deep-purple-lighten-1"
+        text="Создать"
+        variant="flat"
+      >
+        <v-icon
+          icon="mdi-plus-circle-outline"
+          color="white"
+          size="x-large"
+        ></v-icon>
+        <p style="margin-left: 5px">Создать</p>
+      </v-btn>
     </v-card-title>
     <v-data-table
       :headers="colums"
@@ -274,7 +289,7 @@
               auto-select-first
             ></v-autocomplete>
             <v-autocomplete
-              v-model="user"
+              v-model="form.creator"
               item-disabled="disable"
               label="Создатель события"
               density="compact"
@@ -530,16 +545,144 @@
       </v-card-actions>
     </v-card>
   </v-dialog>
+  <!-- Add Client Event -->
+  <v-dialog v-model="add_event_dialog" width="500">
+    <v-card max-width="500" title="Добавить событие">
+      <v-layout>
+        <v-main>
+          <v-container class="pt-8">
+            <v-autocomplete
+              v-model="event_form.event_type"
+              :items="events"
+              :readonly="loading"
+              :rules="[required]"
+              label="Тип события"
+              variant="outlined"
+              density="compact"
+              required
+              auto-select-first
+            ></v-autocomplete>
+            <div
+              v-if="
+                event_form.event_type == 'Открытие счета' ||
+                event_form.event_type == 'Пополнение счета'
+              "
+            >
+              <v-text-field
+                density="compact"
+                v-model="event_form.in_usd"
+                :readonly="loading"
+                :rules="[required]"
+                class="mb-2"
+                label="Сумма в USD"
+                variant="outlined"
+              ></v-text-field>
+            </div>
+            <v-text-field
+              v-model="event_form.data"
+              type="datetime-local"
+              id="meeting-time"
+              name="meeting-time"
+              label="Выберите дату и время"
+              variant="outlined"
+              density="compact"
+            />
+            <v-autocomplete
+              v-model="event_form.status"
+              :items="status"
+              :readonly="loading"
+              :rules="[required]"
+              label="Статус"
+              variant="outlined"
+              density="compact"
+              required
+              auto-select-first
+            ></v-autocomplete>
+            <v-autocomplete
+              v-model="event_form.reflective"
+              density="compact"
+              :items="users"
+              item-title="full_name"
+              item-value="id"
+              :readonly="loading"
+              :rules="[required]"
+              label="Ответственный"
+              variant="outlined"
+              required
+              auto-select-first
+            ></v-autocomplete>
+            <v-autocomplete
+              v-model="event_form.office"
+              density="compact"
+              :items="office"
+              item-title="office"
+              item-value="id"
+              :readonly="loading"
+              :rules="[required]"
+              label="Офис"
+              variant="outlined"
+              required
+              auto-select-first
+            ></v-autocomplete>
+            <v-autocomplete
+              v-model="event_form.creator"
+              item-disabled="disable"
+              label="Создатель события"
+              density="compact"
+              variant="outlined"
+              disabled
+            ></v-autocomplete>
+
+            <v-autocomplete
+              v-model="client.name"
+              item-title="name"
+              item-value="id"
+              :readonly="loading"
+              label="Клиент"
+              variant="outlined"
+              density="compact"
+              required
+              auto-select-first
+              disabled
+            ></v-autocomplete>
+
+            <v-textarea
+              v-model="event_form.description"
+              label="Описание"
+              maxlength="120"
+              density="compact"
+              variant="outlined"
+              counter
+              single-line
+            ></v-textarea>
+          </v-container>
+        </v-main>
+      </v-layout>
+
+      <v-card-actions>
+        <v-spacer></v-spacer>
+
+        <v-btn
+          text="Закрыть"
+          variant="plain"
+          @click="add_event_dialog = false"
+        ></v-btn>
+
+        <v-btn text="Save" variant="tonal" @click="save_event()"></v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script>
 import axios from "axios";
+import { useUserStore } from "@/store/user";
 
 export default {
   name: "client-card",
-
   data() {
     return {
+      add_event_dialog: false,
       edit_dialog: false,
       comment_dialog: false,
       delete_event_dialog: false,
@@ -586,17 +729,7 @@ export default {
           sortable: false,
         },
       ],
-      form: {
-        id: "",
-        reflective: "",
-        event_type: "",
-        data: "",
-        status: "",
-        comment: "",
-        in_usd: "",
-        responsible: "",
-        client: "",
-      },
+
       events: [
         "Регистрация",
         "Звонок",
@@ -616,6 +749,24 @@ export default {
       comment_form: {
         event: 0,
         comment: "",
+      },
+      event_form: {
+        reflective: "",
+        event_type: "",
+        data: "",
+        comment: "",
+        status: "",
+      },
+      form: {
+        id: "",
+        reflective: "",
+        event_type: "",
+        data: "",
+        status: "",
+        comment: "",
+        in_usd: "",
+        responsible: "",
+        client: "",
       },
     };
   },
@@ -691,6 +842,14 @@ export default {
     openDeleteClientDialog() {
       this.delete_client_dialog = true;
     },
+    openAddEventDialog() {
+      const userStore = useUserStore();
+      userStore.initStore();
+      this.add_event_dialog = true;
+      this.getUsers();
+      this.event_form.creator = userStore.user.full_name;
+      this.event_form.reflective = userStore.user.id;
+    },
 
     async delete_event() {
       try {
@@ -737,6 +896,25 @@ export default {
         console.error("Error adding client:", e);
       }
     },
+    async save_event() {
+      const userStore = useUserStore();
+      this.event_form.creator = userStore.user.id;
+      this.event_form.client = this.client.id;
+      console.log(this.event_form);
+      try {
+        axios
+          .post("/api/events/", this.event_form)
+          .then((response) => {
+            console.log("Event added successfully:", response.data);
+            this.add_event_dialog = false;
+          })
+          .catch((error) => {
+            console.error("Error adding client:", error);
+          });
+      } catch (e) {
+        console.error("Error adding client:", e);
+      }
+    },
     async save() {
       try {
         axios
@@ -752,6 +930,7 @@ export default {
         console.error("Error adding client:", e);
       }
     },
+
     async save_comment() {
       try {
         axios
